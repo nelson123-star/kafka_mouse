@@ -3,7 +3,6 @@ from kafka import KafkaProducer
 from kafka.errors import KafkaError
 import json
 import pyautogui
-import datetime
 import time
 
 # Настройки Kafka
