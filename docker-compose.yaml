@@ -14,6 +14,13 @@ services:
     image: confluentinc/cp-zookeeper:5.5.3
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
+      #Добавил ниже настройки, чтобы не было ошибок падения kafka при запуске
+      ZOOKEEPER_TICK_TIME: 2000
+      # Позволяет быстрее обнаруживать падение брокера
+      ZOOKEEPER_SYNC_LIMIT: 2
+      # Автоочистка снапшотов (чтобы диск не забивался)
+      ZOOKEEPER_AUTOPURGE_SNAP_RETAIN_COUNT: 3
+      ZOOKEEPER_AUTOPURGE_PURGE_INTERVAL: 1
     ports:
       - "2181:2181"
     volumes:
@@ -23,6 +30,7 @@ services:
   kafka:
     image: confluentinc/cp-enterprise-kafka:5.5.3
     depends_on: [zookeeper]
+    stop_grace_period: 1m
     environment:
       KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
@@ -33,6 +41,9 @@ services:
       KAFKA_BROKER_ID: 1
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_JMX_PORT: 9991
+      # Ускорение timeout-а
+      KAFKA_ZOOKEEPER_SESSION_TIMEOUT_MS: 6000
+      KAFKA_ZOOKEEPER_CONNECTION_TIMEOUT_MS: 6000
     ports:
       - "9092:9092"
     volumes:
