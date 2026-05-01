@@ -11,26 +11,29 @@ services:
       - ./clickhouse/users.xml:/etc/clickhouse-server/users.xml
 
   zookeeper:
-    image: confluentinc/cp-zookeeper:5.5.3
+    image: confluentinc/cp-zookeeper:6.2.4
+    healthcheck:
+      test: [ "CMD", "nc", "-vz", "localhost", "2181" ]
+      interval: 10s
+      timeout: 3s
+      retries: 3
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
-      #Добавил ниже настройки, чтобы не было ошибок падения kafka при запуске
       ZOOKEEPER_TICK_TIME: 2000
-      # Позволяет быстрее обнаруживать падение брокера
-      ZOOKEEPER_SYNC_LIMIT: 2
-      # Автоочистка снапшотов (чтобы диск не забивался)
-      ZOOKEEPER_AUTOPURGE_SNAP_RETAIN_COUNT: 3
-      ZOOKEEPER_AUTOPURGE_PURGE_INTERVAL: 1
     ports:
-      - "2181:2181"
-    volumes:
-      - zookeeper-data:/var/lib/zookeeper/data
-      - zookeeper-log:/var/lib/zookeeper/log
+      - 22181:2181
 
   kafka:
     image: confluentinc/cp-enterprise-kafka:5.5.3
-    depends_on: [zookeeper]
+    depends_on: 
+      zookeeper:
+        condition: service_healthy
     stop_grace_period: 1m
+    healthcheck:
+      test: [ "CMD", "nc", "-vz", "localhost", "9092" ]
+      interval: 10s
+      timeout: 3s
+      retries: 3
     environment:
       KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
