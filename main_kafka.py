@@ -4,11 +4,15 @@ from kafka.errors import KafkaError
 import json
 import pyautogui
 import time
+import configparser
+
+config = configparser.ConfigParser()
+config.read('settings.ini')
 
 # Настройки Kafka
-KAFKA_BOOTSTRAP_SERVERS = "localhost:9092"
-KAFKA_TOPIC = "test_topic"
-TIME_CHECK = 30
+KAFKA_BOOTSTRAP_SERVERS = config['Kafka']['KAFKA_BOOTSTRAP_SERVERS']
+KAFKA_TOPIC = config['Kafka']['KAFKA_TOPIC']
+TIME_CHECK = int(config['Windows']['TIME_CHECK_Seconds'])
 
 if __name__ == '__main__':
 
@@ -42,8 +46,10 @@ if __name__ == '__main__':
                 
             except KafkaError as e:
                 print(f"Ошибка Kafka: {e}")
+                break
             except Exception as e:
-                print(f"Неожиданная ошибка: {e}")
+                print(f"Ошибка: {e}")
+                break
     
     finally:
         producer.close()
