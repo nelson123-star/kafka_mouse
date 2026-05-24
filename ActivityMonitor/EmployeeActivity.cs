@@ -69,6 +69,8 @@ namespace ActivityMonitor
         // Подписка на события блокировки экрана (нужно запускать в UI-потоке или спец. окне)
         public void SubscribeSessionEvents(Action<string> onEventOccurred)
         {
+
+            // SystemEvents.SessionSwitch генерирует события при смене сессии, таких как блокировка, разблокировка, вход и выход пользователя. В обработчике мы можем определить тип события и отправить соответствующую информацию в Kafka. Важно убедиться, что этот код выполняется в контексте, который позволяет обрабатывать события Windows (например, в WPF или WinForms приложении), так как в консольном приложении могут возникать сложности с обработкой таких событий.
             SystemEvents.SessionSwitch += (s, e) => 
             {
                 // Получаем статус в виде строки
@@ -78,6 +80,52 @@ namespace ActivityMonitor
                 onEventOccurred(status);
             };
         }
+
+
+        // Метод получения имя ПК
+        public string GetNamePC()
+        {
+            try
+            {
+                return Environment.MachineName;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ошибка при получении имени ПК: {ex.Message}");
+                return "Unknown_PC";
+            }
+        }
+
+        // Метод получения имя пользователя        
+        public string GetUserName()
+        {
+            try
+            {
+                return Environment.UserName;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ошибка при получении имени пользователя: {ex.Message}");
+                return "Unknown_User";
+            }
+        }
+
+        // Метод получения версии OS
+        public string GetOSVersion()
+        {
+            try
+            {
+                return Environment.OSVersion.ToString();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Ошибка при получении версии операционной системы: {ex.Message}");
+                return "Unknown_OS";                
+            }
+        }
+
+        // TODO: текущего Wi-Fi, загрузки CPU и RAM, подключенных USB-устройств   
+        // public
 
         // // Метод получения сбора количество кликов и нажатий клавиш
         // public int KeyStrokes { get; private set; }
@@ -98,45 +146,45 @@ namespace ActivityMonitor
 
         // public void OnKeyPressed() => KeyStrokes++;
 
-        // // Получение имени активного Wi-Fi (через интерфейс командной строки или Managed Wifi)
-        // public string GetCurrentWifiSSID()
-        // {
-        //     var process = new System.Diagnostics.Process
-        //     {
-        //         StartInfo = new System.Diagnostics.ProcessStartInfo
-        //         {
-        //             FileName = "netsh",
-        //             Arguments = "wlan show interfaces",
-        //             UseShellExecute = false,
-        //             RedirectStandardOutput = true,
-        //             CreateNoWindow = true
-        //         }
-        //     };
-        //     process.Start();
-        //     string output = process.StandardOutput.ReadToEnd();
-        //     // Далее парсим строку, содержащую "SSID"
-        //     return output; 
-        // }
+        // Получение имени активного Wi-Fi (через интерфейс командной строки или Managed Wifi)
+        public string GetCurrentWifiSSID()
+        {
+            var process = new System.Diagnostics.Process
+            {
+                StartInfo = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = "netsh",
+                    Arguments = "wlan show interfaces",
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    CreateNoWindow = true
+                }
+            };
+            process.Start();
+            string output = process.StandardOutput.ReadToEnd();
+            // Далее парсим строку, содержащую "SSID"
+            return output; 
+        }
 
-        // private PerformanceCounter cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
-        // private PerformanceCounter ramCounter = new PerformanceCounter("Memory", "Available MBytes");
+        private PerformanceCounter cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
+        private PerformanceCounter ramCounter = new PerformanceCounter("Memory", "Available MBytes");
 
-        // public float GetCpuUsage() => cpuCounter.NextValue();
-        // public float GetAvailableRam() => ramCounter.NextValue();
+        public float GetCpuUsage() => cpuCounter.NextValue();
+        public float GetAvailableRam() => ramCounter.NextValue();
 
-        // // Получение списка подключенных USB-устройств (через WMI)
-        // public List<string> GetUsbDevices()
-        // {
-        //     var devices = new List<string>();
-        //     using (var searcher = new System.Management.ManagementObjectSearcher(@"Select * From Win32_USBControllerDevice"))
-        //     {
-        //         foreach (var device in searcher.Get())
-        //         {
-        //             devices.Add(device["Dependent"].ToString());
-        //         }
-        //     }
-        //     return devices;
-        // }
+        // Получение списка подключенных USB-устройств (через WMI)
+        public List<string> GetUsbDevices()
+        {
+            var devices = new List<string>();
+            using (var searcher = new System.Management.ManagementObjectSearcher(@"Select * From Win32_USBControllerDevice"))
+            {
+                foreach (var device in searcher.Get())
+                {
+                    devices.Add(device["Dependent"].ToString());
+                }
+            }
+            return devices;
+        }
 
     }
     
