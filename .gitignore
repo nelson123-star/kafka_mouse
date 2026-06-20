@@ -1,0 +1,8 @@
+[Db]in/
+[Ob]ject/
+obj/
+bin/
+*.user
+*.suo
+.vs/
+ActivityMonitor.sln
