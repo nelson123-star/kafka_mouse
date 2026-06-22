@@ -9,7 +9,7 @@ namespace ActivityMonitor
 {
     class EmployeeActivity
     {
-        public record MousePosition(int X, int Y);
+        public record MousePosition(int X_coordinate, int Y_coordinate);
         
         // TODO: изменить метод GetCursorPosition, чтобы возвращал MousePosition
         // Метод получения координаты мыши
@@ -24,7 +24,7 @@ namespace ActivityMonitor
                 //     {"x_coordinates", position.X},
                 //     {"y_coordinates", position.Y}
                 // };
-                return new MousePosition(position.X, position.Y);
+                return new MousePosition(position.X_coordinate, position.Y_coordinate);
             }
             catch (Exception ex)
             {

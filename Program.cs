@@ -148,16 +148,38 @@ internal class Program
         {
             Console.WriteLine($"Ошибка при подписке на события сессии: {ex.Message}");
         }
-        var namePC = employee.GetNamePC();
-        Console.WriteLine($"Название ПК: {namePC}");
 
-        var userName = employee.GetUserName();
-        Console.WriteLine($"Имя пользователя: {userName}");
+        // var namePC = employee.GetNamePC();
+        // Console.WriteLine($"Название ПК: {namePC}");
 
-        var osVersion = employee.GetOSVersion();
-        Console.WriteLine($"Версия OS: {osVersion}");
+        // var userName = employee.GetUserName();
+        // Console.WriteLine($"Имя пользователя: {userName}");
 
+        // var osVersion = employee.GetOSVersion();
+        // Console.WriteLine($"Версия OS: {osVersion}");
 
+        try
+        {
+            var initialData = new
+            {
+                Event = "initial_info",
+                namePC = employee.GetNamePC(),
+                userName = employee.GetUserName(),
+                osVersion = employee.GetOSVersion(),
+                Time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss")
+            };
+
+            var initialDataJSON = JsonSerializer.Serialize(initialData);
+
+            Console.WriteLine($"PC: {initialData.namePC}, User: {initialData.userName}, OS: {initialData.osVersion} ");
+
+            producer.Produce(topic, new Message<string, string> {Key = "initial_info", Value = initialDataJSON } );
+
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Ошибка при отправке initialData: {ex.Message}");
+        }
 
         try
         {
@@ -166,10 +188,16 @@ internal class Program
 
             while (true)
             {
+                mouseData = new
+                {
+                    Event = "mouse_coordinates",
+                    mouseCoordinates = employee.GetCursorPosition(),
+                    Time = DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss")
+                };
 
-                var myDict = employee.GetCursorPosition();
+                // var mouseCoordinates = employee.GetCursorPosition();
 
-                string jsonValue = JsonSerializer.Serialize(myDict);
+                string jsonValue = JsonSerializer.Serialize(mouseData);
 
 
                 DateTime end = DateTime.Now;
@@ -178,11 +206,22 @@ internal class Program
                 int currentMinute = (int)duration.TotalMinutes;
 
                 // Отправляем данные о координатах мыши в Kafka
-                producer.Produce(topic, new Message<string, string> { Key = "mouse_coordinates", Value = jsonValue });
+                producer.Produce(topic, new Message<string, string> {
+                     Key = "mouse_coordinates", Value = jsonValue });
 
                 // Получаем название активного окна и отправляем в Kafka
-                string ActiveWindowTitle = employee.GetActiveWindowTitle();
-                producer.Produce(topic, new Message<string, string> { Key = "active_window", Value = ActiveWindowTitle });
+                activeWindowData = new
+                {
+                    Event = "active_window",
+                    ActiveWindowTitle = employee.GetActiveWindowTitle(),
+                    Time = DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss")
+                };
+
+                activeWindowDataJSON = JsonSerializer.Serialize(activeWindowData);
+
+                // string ActiveWindowTitle = employee.GetActiveWindowTitle();
+                producer.Produce(topic, new Message<string, string> {
+                     Key = "active_window", Value = ActiveWindowTitle });
 
                 // Закомментировал, чтобы не засорять Кафку, дублирующий блок подписки на SubscribeSessionEvents, который приводил к утечке памяти
                 // Подписываемся на события сессии и отправляем их в Kafka
